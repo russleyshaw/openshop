@@ -1,0 +1,16 @@
+// using node-style package resolution in a CSS file:
+@import "~normalize.css";
+@import "~@blueprintjs/core/lib/css/blueprint.css";
+@import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
+
+@import "~@blueprintjs/core/lib/scss/variables";
+
+.flex-grow {
+    flex: 1 1 auto;
+}
+
+html,
+body,
+#root {
+    background-color: $pt-dark-app-background-color;
+}
