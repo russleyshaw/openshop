@@ -27,7 +27,7 @@ export function isColorEqual(a: Vec3 | Vec4, b: Vec3 | Vec4): boolean {
     return true;
 }
 
-export function rgbToHsv(rgb: Vec3 | Vec4, out: Vec3) {
+export function rgbToHsv(rgb: Vec3 | Vec4, out: Vec3): void {
     const rPrime = rgb[0] / 255;
     const gPrime = rgb[1] / 255;
     const bPrime = rgb[2] / 255;

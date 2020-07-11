@@ -1,9 +1,8 @@
 import * as React from "react";
 import styled from "styled-components";
-import { Tool, ToolsModel } from "../models/tools";
+import { Tool } from "../models/tools";
 
-import { Button, Icon, Colors, Popover } from "@blueprintjs/core";
-import { IconNames } from "@blueprintjs/icons";
+import { Button, Colors, Popover } from "@blueprintjs/core";
 
 import {
     faMousePointer,
@@ -14,7 +13,7 @@ import {
 
 import { observer } from "mobx-react";
 
-import { ExternalIcon } from "../components/fa_icon";
+import { FaIcon } from "../components/fa_icon";
 import { AlphaBackdropDiv } from "../components/alpha_backdrop";
 import { rgbToCss } from "../colors";
 import { ProjectModel } from "../models/project";
@@ -97,11 +96,10 @@ export const ToolboxView = observer(
                         active={tool.tool === Tool.Select}
                         onClick={() => project.tools.setCurrent(Tool.Select)}
                     >
-                        <ExternalIcon icon={faMousePointer} />
+                        <FaIcon icon={faMousePointer} />
                     </Button>
                     <Button
                         title="Pan"
-                        icon={IconNames.HAND}
                         active={tool.tool === Tool.Pan}
                         onClick={() => project.tools.setCurrent(Tool.Pan)}
                     />
@@ -110,7 +108,6 @@ export const ToolboxView = observer(
                 <ToolSelectDiv>
                     <Button
                         title="Pencil"
-                        icon={IconNames.EDIT}
                         active={tool.tool === Tool.Pencil}
                         onClick={() => project.tools.setCurrent(Tool.Pencil)}
                     />
@@ -119,11 +116,10 @@ export const ToolboxView = observer(
                         active={tool.tool === Tool.Brush}
                         onClick={() => project.tools.setCurrent(Tool.Brush)}
                     >
-                        <ExternalIcon icon={faPaintBrush} />
+                        <FaIcon icon={faPaintBrush} />
                     </Button>
                     <Button
                         title="Eraser"
-                        icon={IconNames.ERASER}
                         active={tool.tool === Tool.Eraser}
                         onClick={() => project.tools.setCurrent(Tool.Eraser)}
                     />
@@ -135,14 +131,14 @@ export const ToolboxView = observer(
                         active={tool.tool === Tool.Fill}
                         onClick={() => project.tools.setCurrent(Tool.Fill)}
                     >
-                        <ExternalIcon icon={faFill} />
+                        <FaIcon icon={faFill} />
                     </Button>
                     <Button
                         title="Pick a color."
                         active={tool.tool === Tool.Eyedropper}
                         onClick={() => project.tools.setCurrent(Tool.Eyedropper)}
                     >
-                        <ExternalIcon icon={faEyeDropper} />
+                        <FaIcon icon={faEyeDropper} />
                     </Button>
                 </ToolSelectDiv>
 

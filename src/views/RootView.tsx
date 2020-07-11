@@ -2,9 +2,8 @@ import { useLocalStore } from "mobx-react";
 import { hot } from "react-hot-loader/root";
 import * as React from "react";
 import { createGlobalStyle } from "styled-components";
-import { AppModel } from "./models/app";
-import { AppView } from "./views/app";
-import { Colors } from "@blueprintjs/core";
+import { AppModel } from "../models/app";
+import AppView from "./AppView";
 
 const GlobalStyle = createGlobalStyle`
     html, body, #root {

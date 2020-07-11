@@ -19,6 +19,11 @@ module.exports = (_, args) => {
     ];
 
     const alias = {};
+    const optimization = {
+        splitChunks: {
+            chunks: "all",
+        },
+    };
 
     if (isDevMode) {
         plugins.push(new BundleAnalyzerPlugin());
@@ -33,7 +38,10 @@ module.exports = (_, args) => {
 
     return {
         mode,
-        entry: "./src/index.tsx",
+        entry: {
+            index: "./src/index.tsx",
+        },
+        optimization,
         module: {
             rules: [
                 {
@@ -97,7 +105,8 @@ module.exports = (_, args) => {
             alias,
         },
         output: {
-            filename: "bundle.js",
+            filename: "[name].bundle.js",
+            chunkFilename: "[name].bundle.js",
             path: path.resolve(__dirname, "dist"),
         },
         watchOptions: {

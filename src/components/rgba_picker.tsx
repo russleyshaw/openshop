@@ -1,5 +1,4 @@
-import { observer } from "mobx-react";
-import { rgbToCss, rgbToHex, rgbToHsv, hsvToRgb, isColorEqual } from "../colors";
+import { rgbToHsv, hsvToRgb, isColorEqual } from "../colors";
 import styled from "styled-components";
 import { RadioGroup, Radio, Slider, Label } from "@blueprintjs/core";
 

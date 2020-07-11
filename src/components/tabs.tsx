@@ -2,7 +2,6 @@ import * as React from "react";
 import styled from "styled-components";
 
 import { Button } from "@blueprintjs/core";
-import { IconNames } from "@blueprintjs/icons";
 
 export interface TabProps {
     key: string;
@@ -52,7 +51,7 @@ export default function Tabs(props: TabsProps): JSX.Element {
             {props.tabs.map(tab => (
                 <TabElement key={tab.key} onClick={tab.onClick} active={props.active === tab.key}>
                     <NameDiv title={tab.name}>{tab.name}</NameDiv>
-                    {tab.onClose && <Button icon={IconNames.CROSS} onClick={tab.onClose} />}
+                    {tab.onClose && <Button onClick={tab.onClose} />}
                 </TabElement>
             ))}
         </RootDiv>

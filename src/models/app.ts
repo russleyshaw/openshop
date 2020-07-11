@@ -1,11 +1,11 @@
-import { observable, action } from "mobx";
+import { observable, action, computed } from "mobx";
 import { ToolsModel } from "./tools";
 import { ProjectModel } from "./project";
 import { LayerModel } from "./layer";
 
 export class AppModel {
     @observable
-    activeProjectUuid?: string;
+    selectedProjectUuid?: string;
 
     @observable
     projects: ProjectModel[] = [];
@@ -19,6 +19,13 @@ export class AppModel {
         newProj.layers.push(newLayer1, newLayer2);
         newProj.setActiveLayer(newLayer1.uuid);
         this.projects.push(newProj);
-        this.activeProjectUuid = newProj.uuid;
+        this.selectedProjectUuid = newProj.uuid;
+    }
+
+    @computed
+    get selectedProject(): ProjectModel | undefined {
+        if (this.selectedProjectUuid == null) return undefined;
+
+        return this.projects.find(p => p.uuid === this.selectedProjectUuid);
     }
 }

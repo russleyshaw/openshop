@@ -20,7 +20,7 @@ export interface ProjectViewProps {
     project: ProjectModel;
 }
 
-export const ProjectView = observer((props: ProjectViewProps) => {
+export default observer((props: ProjectViewProps) => {
     const { app, project } = props;
 
     return (

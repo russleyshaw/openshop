@@ -2,7 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 import { SizeMe } from "react-sizeme";
 
-import { asNotNil, delayMs, isPowerOf2, blendImageDataLayersNormal } from "../util";
+import { asNotNil, delayMs, blendImageDataLayersNormal } from "../util";
 import { Tool } from "../models/tools";
 import { AppModel } from "../models/app";
 import { observer } from "mobx-react";
@@ -294,18 +294,4 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
             </RootDiv>
         );
     }
-}
-
-function loadShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
-    const shader = asNotNil(gl.createShader(type), "Unable to create shader.");
-
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        gl.deleteShader(shader);
-        throw new Error("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
-    }
-
-    return shader;
 }

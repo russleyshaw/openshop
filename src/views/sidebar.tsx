@@ -6,9 +6,7 @@ import { ProjectModel } from "../models/project";
 
 import { LayerModel } from "../models/layer";
 import { Button, Colors } from "@blueprintjs/core";
-import { IconNames } from "@blueprintjs/icons";
 import { AlphaBackdropDiv } from "../components/alpha_backdrop";
-import { useInterval } from "../common/react";
 import { useNotify } from "../common/notifier";
 import { throttle } from "lodash";
 
@@ -73,19 +71,13 @@ export const SidebarView = observer((props: SidebarViewProps) => {
         <RootDiv>
             <HeaderDiv>
                 <div style={{ gridArea: "title" }}>Layers</div>
-                <Button
-                    onClick={() => project.addLayer()}
-                    style={{ gridArea: "add" }}
-                    small
-                    icon={IconNames.PLUS}
-                />
+                <Button onClick={() => project.addLayer()} style={{ gridArea: "add" }} small />
                 <Button
                     onClick={() =>
                         activeLayer ? project.deleteLayer(activeLayer.uuid) : undefined
                     }
                     style={{ gridArea: "delete" }}
                     small
-                    icon={IconNames.TRASH}
                 />
             </HeaderDiv>
             <LayersDiv>
@@ -146,7 +138,6 @@ export const LayerView = observer((props: LayerViewProps) => {
                 <Button
                     onClick={() => (layer.hidden = !layer.hidden)}
                     title={layer.hidden ? "Show layer." : "Hide layer."}
-                    icon={layer.hidden ? IconNames.EYE_OFF : IconNames.EYE_OPEN}
                 />
             </div>
         </LayerDiv>

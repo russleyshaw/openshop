@@ -15,4 +15,13 @@ module.exports = {
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
         "plugin:react/recommended",
     ],
+    rules: {
+        "@typescript-eslint/no-inferrable-types": [
+            "warn",
+            {
+                ignoreParameters: true,
+                ignoreProperties: true,
+            },
+        ],
+    },
 };

@@ -1,23 +1,19 @@
 import * as React from "react";
 import styled from "styled-components";
 
-import { Button, Navbar, Alignment, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Tab, Tabs } from "@blueprintjs/core";
 
 import { AppModel } from "../models/app";
-import { NewProjectView } from "./new_project";
 
-import { ProjectView } from "./project";
 import { observer } from "mobx-react";
-import { ProjectModel } from "../models/project";
-import { IconNames } from "@blueprintjs/icons";
+import { loader } from "../models/loader";
+import LoaderProgressView from "./LoaderProgressView";
 
 const RootDiv = styled.div`
     display: flex;
     flex-direction: column;
     height: 100%;
 `;
-
-const FooterDiv = styled.div``;
 
 const TabTitleDiv = styled.div`
     display: grid;
@@ -35,19 +31,25 @@ export interface AppViewProps {
     model: AppModel;
 }
 
-export const AppView = observer((props: AppViewProps) => {
+const TopBar = React.lazy(() => loader.load("Loading top bar...", () => import("./topbar")));
+const ProjectView = React.lazy(() =>
+    loader.load("Loading project view...", () => import("./project"))
+);
+
+export default observer((props: AppViewProps) => {
     const { model } = props;
 
-    const project = model.projects.find(p => p.uuid === model.activeProjectUuid);
+    const project = model.projects.find(p => p.uuid === model.selectedProjectUuid);
 
     return (
         <RootDiv>
-            <Navbar>
-                <Navbar.Group align={Alignment.LEFT}>
-                    <Navbar.Heading>Paint</Navbar.Heading>
-                </Navbar.Group>
-            </Navbar>
-            <Tabs onChange={uuid => (model.activeProjectUuid = uuid as string)}>
+            <LoaderProgressView loader={loader} />
+
+            <React.Suspense fallback={null}>
+                <TopBar app={model} />
+            </React.Suspense>
+
+            <Tabs onChange={uuid => (model.selectedProjectUuid = uuid as string)}>
                 {model.projects.map(proj => (
                     <Tab
                         key={proj.uuid}
@@ -58,13 +60,15 @@ export const AppView = observer((props: AppViewProps) => {
                                 <div>
                                     ({proj.width}x{proj.height})
                                 </div>
-                                <Button minimal small icon={IconNames.CROSS} />
+                                <Button icon="cross" minimal small />
                             </TabTitleDiv>
                         }
                     />
                 ))}
             </Tabs>
-            {project && <ProjectView app={model} project={project} />}
+            <React.Suspense fallback={null}>
+                {project && <ProjectView app={model} project={project} />}
+            </React.Suspense>
         </RootDiv>
     );
 });

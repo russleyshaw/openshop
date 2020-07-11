@@ -8,6 +8,6 @@ import "./index.scss";
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import Root from "./root";
+import Root from "./views/RootView";
 
 ReactDOM.render(<Root />, document.getElementById("root"));
