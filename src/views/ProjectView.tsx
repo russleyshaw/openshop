@@ -2,11 +2,11 @@ import * as React from "react";
 import styled from "styled-components";
 import { observer } from "mobx-react";
 
-import { ToolboxView } from "./toolbox";
+import ToolboxView from "./ToolboxView";
 import { ProjectStageView } from "./project_stage";
 import { AppModel } from "../models/app";
 import { ProjectModel } from "../models/project";
-import { SidebarView } from "./sidebar";
+import SidebarView from "./SidebarView";
 
 const RootDiv = styled.div`
     flex: 1 1 auto;

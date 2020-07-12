@@ -26,7 +26,11 @@ module.exports = (_, args) => {
     };
 
     if (isDevMode) {
-        plugins.push(new BundleAnalyzerPlugin());
+        plugins.push(
+            new BundleAnalyzerPlugin({
+                openAnalyzer: false,
+            })
+        );
         alias["react-dom"] = "@hot-loader/react-dom";
     } else {
         plugins.push(

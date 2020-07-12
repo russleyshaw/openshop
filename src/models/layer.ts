@@ -62,15 +62,22 @@ export class LayerModel {
     private rawDrawPoint(point: Point, color: Vec4, size: number, dirtyPixels: boolean[]): void {
         const image = this.image.value;
 
-        const pixelIdx = point.y * image.width + point.x;
-        const rgbaIdx = pixelIdx * 4;
+        let pixelIdx = 0;
+        let rgbaIdx = 0;
 
-        image.data[rgbaIdx + 0] = color[0];
-        image.data[rgbaIdx + 1] = color[1];
-        image.data[rgbaIdx + 2] = color[2];
-        image.data[rgbaIdx + 3] = color[3];
+        for (let y = point.y; y <= point.y + size; y++) {
+            for (let x = point.x; x <= point.x + size; x++) {
+                pixelIdx = y * image.width + x;
+                rgbaIdx = pixelIdx * 4;
 
-        dirtyPixels[pixelIdx] = true;
+                image.data[rgbaIdx + 0] = color[0];
+                image.data[rgbaIdx + 1] = color[1];
+                image.data[rgbaIdx + 2] = color[2];
+                image.data[rgbaIdx + 3] = color[3];
+
+                dirtyPixels[pixelIdx] = true;
+            }
+        }
     }
 
     private rawErasePoint(point: Point, size: number, dirtyPixels: boolean[]): void {

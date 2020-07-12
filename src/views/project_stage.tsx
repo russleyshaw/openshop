@@ -3,10 +3,9 @@ import styled from "styled-components";
 import { SizeMe } from "react-sizeme";
 
 import { asNotNil, delayMs, blendImageDataLayersNormal } from "../util";
-import { Tool } from "../models/tools";
 import { AppModel } from "../models/app";
 import { observer } from "mobx-react";
-import { ProjectModel } from "../models/project";
+import { ProjectModel, Tool } from "../models/project";
 
 import alphaPattern from "../../static/alpha-pattern.png";
 
@@ -89,26 +88,31 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
     onClick: React.MouseEventHandler<HTMLCanvasElement> = e => {
         const project = this.props.project;
 
-        const tool = project.tools.current;
+        const tool = project.selectedTool;
         const newCursor = this.updateCursor(e.clientX, e.clientY);
 
-        switch (tool.tool) {
+        switch (tool) {
             case Tool.Fill:
                 {
-                    const layer = project.activeLayer;
+                    const layer = project.selectedLayer;
                     if (layer == null) return;
 
-                    layer.fill(newCursor, project.primaryColor, tool.tolerance, this.dirtyPixels);
+                    layer.fill(
+                        newCursor,
+                        project.primaryColor,
+                        project.fillTolerance,
+                        this.dirtyPixels
+                    );
 
                     this.throttledUpdateImageData();
                 }
                 break;
             case Tool.Eraser:
                 {
-                    const layer = project.activeLayer;
+                    const layer = project.selectedLayer;
                     if (layer == null) return;
 
-                    layer.erasePoint(newCursor, tool.size, this.dirtyPixels);
+                    layer.erasePoint(newCursor, project.eraserSize, this.dirtyPixels);
 
                     this.throttledUpdateImageData();
                 }
@@ -158,19 +162,19 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
         const prevCursor = this.cursor ?? newCursor;
         this.cursor = newCursor;
 
-        const tool = project.tools.current;
+        const tool = project.selectedTool;
 
-        switch (tool.tool) {
+        switch (tool) {
             case Tool.Pencil:
                 {
                     if (this.isMouseDown) {
-                        const layer = project.activeLayer;
+                        const layer = project.selectedLayer;
                         if (layer != null) {
                             layer.drawLine(
                                 prevCursor,
                                 newCursor,
                                 project.primaryColor,
-                                1,
+                                project.pencilSize,
                                 this.dirtyPixels
                             );
                             this.throttledUpdateImageData();
@@ -190,9 +194,14 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
             case Tool.Eraser:
                 {
                     if (this.isMouseDown) {
-                        const layer = project.activeLayer;
+                        const layer = project.selectedLayer;
                         if (layer != null) {
-                            layer.eraseLine(prevCursor, newCursor, tool.size, this.dirtyPixels);
+                            layer.eraseLine(
+                                prevCursor,
+                                newCursor,
+                                project.eraserSize,
+                                this.dirtyPixels
+                            );
                             this.throttledUpdateImageData();
                         }
                     }
