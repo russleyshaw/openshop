@@ -11,20 +11,14 @@ import alphaPattern from "../../static/alpha-pattern.png";
 
 import { throttle } from "lodash";
 import { Point } from "../common/point";
+import { AlphaBackdropDiv } from "../components/alpha_backdrop";
 
 const RootDiv = styled.div`
-    position: relative;
     overflow: hidden;
     flex: 1 1 auto;
 `;
 
-const StageCanvas = styled.canvas`
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 1;
-    background-image: url(${alphaPattern});
-`;
+const StageCanvas = styled.canvas``;
 
 export interface ProjectStageViewProps {
     app: AppModel;
@@ -51,7 +45,6 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
     ref: HTMLCanvasElement | null = null;
 
     imageData: ImageData;
-    dirtyPixels: boolean[];
     sceneData?: SceneWebGlData;
 
     isMouseDown = false;
@@ -67,7 +60,6 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
         const width = props.project.width;
         const height = props.project.height;
         this.imageData = new ImageData(width, height);
-        this.dirtyPixels = new Array<boolean>(width * height).fill(false);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -101,7 +93,7 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
                         newCursor,
                         project.primaryColor,
                         project.fillTolerance,
-                        this.dirtyPixels
+                        project.dirtyPixels
                     );
 
                     this.throttledUpdateImageData();
@@ -112,7 +104,7 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
                     const layer = project.selectedLayer;
                     if (layer == null) return;
 
-                    layer.erasePoint(newCursor, project.eraserSize, this.dirtyPixels);
+                    layer.erasePoint(newCursor, project.eraserSize, project.dirtyPixels);
 
                     this.throttledUpdateImageData();
                 }
@@ -140,10 +132,10 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
         const canvasX = Math.round(clientX - bbox.left);
         const canvasY = Math.round(clientY - bbox.top);
 
-        const newCursor = {
-            x: Math.round(canvasX - this.viewOffsetX),
-            y: Math.round(canvasY - this.viewOffsetY),
-        };
+        const newCursor: Point = [
+            Math.round(canvasX - this.viewOffsetX),
+            Math.round(canvasY - this.viewOffsetY),
+        ];
         this.cursor = newCursor;
 
         return newCursor;
@@ -158,7 +150,7 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
         const canvasX = Math.round(e.clientX - bbox.left);
         const canvasY = Math.round(e.clientY - bbox.top);
 
-        const newCursor = { x: canvasX - this.viewOffsetX, y: canvasY - this.viewOffsetY };
+        const newCursor: Point = [canvasX - this.viewOffsetX, canvasY - this.viewOffsetY];
         const prevCursor = this.cursor ?? newCursor;
         this.cursor = newCursor;
 
@@ -175,7 +167,7 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
                                 newCursor,
                                 project.primaryColor,
                                 project.pencilSize,
-                                this.dirtyPixels
+                                project.dirtyPixels
                             );
                             this.throttledUpdateImageData();
                         }
@@ -200,7 +192,7 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
                                 prevCursor,
                                 newCursor,
                                 project.eraserSize,
-                                this.dirtyPixels
+                                project.dirtyPixels
                             );
                             this.throttledUpdateImageData();
                         }
@@ -250,7 +242,7 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
                 .filter(l => !l.hidden)
                 .reverse()
                 .map(l => l.image.value),
-            this.dirtyPixels,
+            project.dirtyPixels,
             this.imageData
         );
     }
@@ -283,23 +275,23 @@ export class ProjectStageView extends React.Component<ProjectStageViewProps> {
     ///////////////////////////////////////////////////////////////////////////
 
     render() {
+        const { project } = this.props;
+
         return (
             <RootDiv>
-                <SizeMe monitorWidth monitorHeight>
-                    {({ size }) => (
-                        <StageCanvas
-                            onClick={this.onClick}
-                            width={size.width ?? 800}
-                            height={size.height ?? 600}
-                            onMouseDown={this.onMouseDown}
-                            onMouseUp={this.onMouseUp}
-                            onMouseMove={this.onMouseMove}
-                            onMouseOut={this.onMouseOut}
-                            onWheel={this.onWheel}
-                            ref={this.onRef}
-                        />
-                    )}
-                </SizeMe>
+                <AlphaBackdropDiv style={{ width: project.width, height: project.height }}>
+                    <StageCanvas
+                        onClick={this.onClick}
+                        width={project.width}
+                        height={project.height}
+                        onMouseDown={this.onMouseDown}
+                        onMouseUp={this.onMouseUp}
+                        onMouseMove={this.onMouseMove}
+                        onMouseOut={this.onMouseOut}
+                        onWheel={this.onWheel}
+                        ref={this.onRef}
+                    />
+                </AlphaBackdropDiv>
             </RootDiv>
         );
     }

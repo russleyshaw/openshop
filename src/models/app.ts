@@ -1,6 +1,7 @@
 import { observable, action, computed } from "mobx";
 import { ProjectModel } from "./project";
 import { LayerModel } from "./layer";
+import { getNextName } from "../common/util";
 
 export class AppModel {
     @observable
@@ -8,18 +9,6 @@ export class AppModel {
 
     @observable
     projects: ProjectModel[] = [];
-
-    constructor() {
-        const width = 800;
-        const height = 600;
-        const newLayer1 = new LayerModel({ width, height });
-        const newLayer2 = new LayerModel({ width, height });
-        const newProj = new ProjectModel({ width, height });
-        newProj.layers.push(newLayer1, newLayer2);
-        newProj.setSelectedLayer(newLayer1.uuid);
-        this.projects.push(newProj);
-        this.selectedProjectUuid = newProj.uuid;
-    }
 
     @computed
     get selectedProject(): ProjectModel | undefined {
@@ -35,5 +24,27 @@ export class AppModel {
         }
 
         this.selectedProjectUuid = uuid;
+    }
+
+    @action
+    addNewEmptyProject(name?: string): ProjectModel {
+        const width = 800;
+        const height = 600;
+
+        const myName =
+            name ??
+            getNextName(
+                "Untitled #",
+                this.projects.map(p => p.name)
+            );
+
+        const newProj = new ProjectModel({ width, height, name: myName });
+        const myLayer = newProj.addNewEmptyLayer();
+        newProj.setSelectedLayer(myLayer.uuid);
+        this.projects.push(newProj);
+
+        this.setSelectedProject(newProj.uuid);
+
+        return newProj;
     }
 }

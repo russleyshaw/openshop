@@ -1,27 +1,29 @@
-export interface Point {
-    x: number;
-    y: number;
-}
+import { Vec2 } from "./vec";
 
-export function calcLine(start: Point, end: Point): Array<Point> {
-    const results: Array<Point> = [];
+export type Point = Vec2;
 
-    const deltaX = end.x - start.x;
-    const deltaY = end.y - start.y;
+export function calcLine(start: Vec2, end: Vec2): Array<Vec2> {
+    const results: Vec2[] = [];
 
+    const deltaX = end[0] - start[0];
+    const deltaY = end[1] - start[1];
+
+    let x = 0;
+    let y = 0;
+    let slope = 0;
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        const slope = deltaY / deltaX;
-        const y = start.y;
-        for (let x = start.x; x != end.x; x += Math.sign(deltaX)) {
-            const y = slope * (x - start.x) + start.y;
-            results.push({ x, y: Math.round(y) });
+        slope = deltaY / deltaX;
+        y = start[1];
+        for (x = start[0]; x != end[0]; x += Math.sign(deltaX)) {
+            y = slope * (x - start[0]) + start[1];
+            results.push([x, Math.round(y)]);
         }
     } else {
-        const slope = deltaX / deltaY;
-        const x = start.x;
-        for (let y = start.y; y != end.y; y += Math.sign(deltaY)) {
-            const x = slope * (y - start.y) + start.x;
-            results.push({ x: Math.round(x), y });
+        slope = deltaX / deltaY;
+        x = start[0];
+        for (y = start[1]; y != end[1]; y += Math.sign(deltaY)) {
+            x = slope * (y - start[1]) + start[0];
+            results.push([Math.round(x), y]);
         }
     }
 

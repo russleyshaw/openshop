@@ -8,6 +8,7 @@ import { ProjectModel } from "../models/project";
 import { LayerModel } from "../models/layer";
 import { AlphaBackdropDiv } from "../components/alpha_backdrop";
 import { useNotify } from "../common/notifier";
+import { IconNames } from "@blueprintjs/icons";
 
 export interface LayerViewProps {
     project: ProjectModel;
@@ -26,6 +27,7 @@ const RootDiv = styled.div<{ selected: boolean }>`
 
     user-select: none;
     background-color: ${props => (props.selected ? Colors.DARK_GRAY1 : Colors.DARK_GRAY2)};
+    ${props => props.selected && `border: 1px ${Colors.BLUE5} solid;`}
     &:hover {
         background-color: rgba(0, 0, 0, 0.25);
     }
@@ -75,6 +77,7 @@ export default observer((props: LayerViewProps) => {
             >
                 <Button
                     onClick={() => (layer.hidden = !layer.hidden)}
+                    icon={layer.hidden ? IconNames.EYE_OFF : IconNames.EYE_OPEN}
                     title={layer.hidden ? "Show layer." : "Hide layer."}
                 />
             </div>

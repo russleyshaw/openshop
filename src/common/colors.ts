@@ -1,4 +1,10 @@
-import { Vec4, Vec3, wrapmod } from "./util";
+import { wrapmod } from "../util";
+import { Vec3, Vec4 } from "./vec";
+
+export type RGB = Vec3;
+export type RGBA = Vec4;
+
+export type HSV = Vec3;
 
 export function rgbToCss(color: Vec3 | Vec4): string {
     const r = Math.round(color[0]);

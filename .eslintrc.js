@@ -23,5 +23,6 @@ module.exports = {
                 ignoreProperties: true,
             },
         ],
+        "@typescript-eslint/ban-types": "off",
     },
 };

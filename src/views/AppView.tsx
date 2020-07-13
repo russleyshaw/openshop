@@ -24,6 +24,7 @@ const TabTitleNameDiv = styled.div`
     word-wrap: unset;
     overflow: hidden;
     white-space: nowrap;
+    margin-left: 8px;
 `;
 
 export interface AppViewProps {
@@ -46,7 +47,7 @@ export default observer((props: AppViewProps) => {
                         id={proj.uuid}
                         title={
                             <TabTitleDiv>
-                                <TabTitleNameDiv title={proj.uuid}>{proj.uuid}</TabTitleNameDiv>
+                                <TabTitleNameDiv title={proj.name}>{proj.name}</TabTitleNameDiv>
                                 <div>
                                     ({proj.width}x{proj.height})
                                 </div>

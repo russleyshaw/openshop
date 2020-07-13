@@ -1,9 +1,5 @@
-import * as React from "react";
-
 import { Point } from "./common/point";
-
-export type Vec3 = [number, number, number];
-export type Vec4 = [number, number, number, number];
+import { Vec4 } from "./common/vec";
 
 export async function delayMs(ms: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, ms));
@@ -120,7 +116,7 @@ export function fillImageData(
 
     const closedPixels = new Array(img.width * img.height).fill(false);
 
-    let pixelIdx = source.y * img.width + source.x;
+    let pixelIdx = source[1] * img.width + source[0];
     let rgbaIdx = pixelIdx * 4;
 
     const colorToReplace: Vec4 = [
@@ -136,16 +132,16 @@ export function fillImageData(
         openPixel = openPixels.shift()!;
 
         if (
-            openPixel.x < 0 ||
-            openPixel.x >= img.width ||
-            openPixel.y < 0 ||
-            openPixel.y >= img.height
+            openPixel[0] < 0 ||
+            openPixel[0] >= img.width ||
+            openPixel[1] < 0 ||
+            openPixel[1] >= img.height
         ) {
             continue;
         }
 
         // Update helper indexes
-        pixelIdx = openPixel.y * img.width + openPixel.x;
+        pixelIdx = openPixel[1] * img.width + openPixel[0];
         rgbaIdx = pixelIdx * 4;
 
         if (closedPixels[pixelIdx]) {
@@ -170,10 +166,10 @@ export function fillImageData(
         dirtyPixels[pixelIdx] = true;
 
         openPixels.push(
-            { x: openPixel.x - 1, y: openPixel.y },
-            { x: openPixel.x + 1, y: openPixel.y },
-            { x: openPixel.x, y: openPixel.y - 1 },
-            { x: openPixel.x, y: openPixel.y + 1 }
+            [openPixel[0] - 1, openPixel[1]],
+            [openPixel[0] + 1, openPixel[1]],
+            [openPixel[0], openPixel[1] - 1],
+            [openPixel[0], openPixel[1] + 1]
         );
     }
 }

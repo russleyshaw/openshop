@@ -1,15 +1,15 @@
-import { rgbToHsv, hsvToRgb, isColorEqual } from "../colors";
+import { rgbToHsv, hsvToRgb, isColorEqual, HSV, RGBA, RGB } from "../common/colors";
 import styled from "styled-components";
 import { RadioGroup, Radio, Slider, Label } from "@blueprintjs/core";
 
 import * as React from "react";
 import { AlphaBackdropDiv } from "./alpha_backdrop";
 import { throttle } from "lodash";
-import { Vec4, Vec3, UnreachableError } from "../util";
+import { UnreachableError } from "../util";
 
 export interface RGBAPickerProps {
-    color: Vec4;
-    onColorChange(color: Vec4): void;
+    color: RGBA;
+    onColorChange(color: RGBA): void;
 }
 
 const RootDiv = styled.div`
@@ -37,7 +37,7 @@ export class RGBAPicker extends React.Component<RGBAPickerProps, State> {
     constructor(props: RGBAPickerProps) {
         super(props);
 
-        const hsvColor: Vec3 = [0, 0, 0];
+        const hsvColor: HSV = [0, 0, 0];
         rgbToHsv(props.color, hsvColor);
 
         this.state = {
@@ -106,7 +106,7 @@ export class RGBAPicker extends React.Component<RGBAPickerProps, State> {
         if (!isColorEqual(prevProps.color, this.props.color)) {
             console.log("Color updated!");
 
-            const hsvColor: Vec3 = [0, 0, 0];
+            const hsvColor: HSV = [0, 0, 0];
             rgbToHsv(this.props.color, hsvColor);
 
             this.setState({
@@ -117,8 +117,8 @@ export class RGBAPicker extends React.Component<RGBAPickerProps, State> {
         }
     }
 
-    updateStateFromColor(newColor: Vec4): void {
-        const hsvColor: Vec3 = [0, 0, 0];
+    updateStateFromColor(newColor: RGBA): void {
+        const hsvColor: HSV = [0, 0, 0];
         rgbToHsv(newColor, hsvColor);
 
         this.setState({
@@ -148,7 +148,7 @@ export class RGBAPicker extends React.Component<RGBAPickerProps, State> {
 
         const pixel = ctx.getImageData(canvasX, canvasY, 1, 1);
 
-        const newColor: Vec4 = [pixel.data[0], pixel.data[1], pixel.data[2], this.state.alpha];
+        const newColor: RGBA = [pixel.data[0], pixel.data[1], pixel.data[2], this.state.alpha];
         this.updateStateFromColor(newColor);
         this.props.onColorChange(newColor);
     };
@@ -176,8 +176,8 @@ export class RGBAPicker extends React.Component<RGBAPickerProps, State> {
         let y = 0;
         let pixelIdx = 0;
         let rgbaIdx = 0;
-        const rgbColor: Vec3 = [0, 0, 0];
-        const hsvColor: Vec3 = [0, 0, 0];
+        const rgbColor: RGB = [0, 0, 0];
+        const hsvColor: HSV = [0, 0, 0];
         for (y = 0; y < ref.height; y++) {
             for (x = 0; x < ref.width; x++) {
                 pixelIdx = y * ref.width + x;
@@ -216,8 +216,8 @@ export class RGBAPicker extends React.Component<RGBAPickerProps, State> {
         let y = 0;
         let pixelIdx = 0;
         let rgbaIdx = 0;
-        const hsvColor: Vec3 = [0, 0, 0];
-        const rgbColor: Vec3 = [0, 0, 0];
+        const hsvColor: HSV = [0, 0, 0];
+        const rgbColor: RGB = [0, 0, 0];
         hsvColor[0] = this.state.hue;
         for (y = 0; y < ref.height; y++) {
             for (x = 0; x < ref.width; x++) {

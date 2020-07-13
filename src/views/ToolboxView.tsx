@@ -17,11 +17,12 @@ import { observer } from "mobx-react";
 
 import { FaIcon } from "../components/fa_icon";
 import { AlphaBackdropDiv } from "../components/alpha_backdrop";
-import { rgbToCss } from "../colors";
+import { rgbToCss, RGBA } from "../common/colors";
 import { ProjectModel, Tool } from "../models/project";
 import { RGBAPicker } from "../components/rgba_picker";
-import { Vec4 } from "../util";
 import { IconNames } from "@blueprintjs/icons";
+import { useDrop } from "react-dnd";
+import { ITEM_TYPES, PaletteColorItem } from "../common/dnd";
 
 const RootDiv = styled.div`
     display: flex;
@@ -63,13 +64,18 @@ const ColorSelectDiv = styled.div`
 
 interface ColoredBoxProps {
     title?: string;
-    color: Vec4;
+    color: RGBA;
 }
 
 const ColoredBox = observer((props: ColoredBoxProps) => {
+    const [, dropRef] = useDrop<PaletteColorItem, {}, {}>({
+        accept: ITEM_TYPES.paletteColor,
+        drop: item => Object.assign(props.color, item.color),
+    });
+
     return (
         <Popover interactionKind="click">
-            <AlphaBackdropDiv>
+            <AlphaBackdropDiv ref={dropRef}>
                 <div
                     title={props.title}
                     style={{

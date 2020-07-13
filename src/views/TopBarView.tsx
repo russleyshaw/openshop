@@ -14,6 +14,9 @@ import {
 } from "@blueprintjs/core";
 import { observer } from "mobx-react";
 import { AppModel } from "../models/app";
+import { IconNames } from "@blueprintjs/icons";
+import { FaIcon } from "../components/fa_icon";
+import { faFile, faFileExport } from "@fortawesome/free-solid-svg-icons";
 
 export interface TopBarProps {
     app: AppModel;
@@ -30,11 +33,20 @@ export default observer((props: TopBarProps) => {
                 <NavbarDivider />
                 <ButtonGroup>
                     <Popover>
-                        <Button minimal large text="File" />
+                        <Button minimal large text="File" rightIcon={IconNames.CARET_DOWN} />
                         <Menu>
-                            <MenuItem text="New" />
+                            <MenuItem
+                                text="New"
+                                title="Creates a new empty project."
+                                icon={<FaIcon icon={faFile} />}
+                                onClick={() => app.addNewEmptyProject()}
+                            />
                             <MenuDivider />
-                            <MenuItem disabled={project == null} text="Export" />
+                            <MenuItem
+                                icon={<FaIcon icon={faFileExport} />}
+                                disabled={project == null}
+                                text="Export"
+                            />
                             <MenuDivider />
                             <MenuItem text="Close" />
                             <MenuItem text="Close Others" />
@@ -43,7 +55,7 @@ export default observer((props: TopBarProps) => {
                         </Menu>
                     </Popover>
                     <Popover>
-                        <Button minimal large text="View" />
+                        <Button minimal large text="View" rightIcon={IconNames.CARET_DOWN} />
                         <Menu>
                             <MenuItem text="Reset To Fit" />
                             <MenuItem text="Reset To 100%" />
