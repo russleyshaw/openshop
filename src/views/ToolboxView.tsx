@@ -19,10 +19,12 @@ import { FaIcon } from "../components/fa_icon";
 import { AlphaBackdropDiv } from "../components/alpha_backdrop";
 import { rgbToCss, RGBA } from "../common/colors";
 import { ProjectModel, Tool } from "../models/project";
-import { RGBAPicker } from "../components/rgba_picker";
+import ColorPickerModal from "../components/ColorPickerModal";
 import { IconNames } from "@blueprintjs/icons";
 import { useDrop } from "react-dnd";
 import { ITEM_TYPES, PaletteColorItem } from "../common/dnd";
+import { PaletteModel } from "../models/palette";
+import ColorSquare from "../components/ColorSquare";
 
 const RootDiv = styled.div`
     display: flex;
@@ -65,29 +67,19 @@ const ColorSelectDiv = styled.div`
 interface ColoredBoxProps {
     title?: string;
     color: RGBA;
+    palette: PaletteModel;
 }
 
 const ColoredBox = observer((props: ColoredBoxProps) => {
-    const [, dropRef] = useDrop<PaletteColorItem, {}, {}>({
-        accept: ITEM_TYPES.paletteColor,
-        drop: item => Object.assign(props.color, item.color),
-    });
+    const target = <ColorSquare color={props.color} />;
 
     return (
-        <Popover interactionKind="click">
-            <AlphaBackdropDiv ref={dropRef}>
-                <div
-                    title={props.title}
-                    style={{
-                        backgroundColor: rgbToCss(props.color),
-                        border: "1px solid black",
-                        height: 32,
-                        width: 32,
-                    }}
-                ></div>
-            </AlphaBackdropDiv>
-            <RGBAPicker color={props.color} onColorChange={c => Object.assign(props.color, c)} />
-        </Popover>
+        <ColorPickerModal
+            palette={props.palette}
+            target={target}
+            color={props.color}
+            onColorSelect={c => Object.assign(props.color, c)}
+        ></ColorPickerModal>
     );
 });
 
@@ -153,8 +145,16 @@ export default observer(
 
                 <SelectionHeader>Colors</SelectionHeader>
                 <ColorSelectDiv>
-                    <ColoredBox color={project.primaryColor} title="Primary" />
-                    <ColoredBox color={project.secondaryColor} title="Secondary" />
+                    <ColoredBox
+                        palette={project.palette}
+                        color={project.primaryColor}
+                        title="Primary"
+                    />
+                    <ColoredBox
+                        palette={project.palette}
+                        color={project.secondaryColor}
+                        title="Secondary"
+                    />
                 </ColorSelectDiv>
                 <div></div>
             </RootDiv>

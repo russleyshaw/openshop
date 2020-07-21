@@ -1,9 +1,12 @@
 import * as React from "react";
-import { noop } from "lodash";
-import { AnyFunction } from "./util";
 
-export function useInterval(callback: () => void, delayMs: number): void {
-    const savedCallback = React.useRef<() => void>(noop);
+/**
+ * Use an interval as a react hook.
+ * @param callback
+ * @param delayMs Interval delay time. Use null to disable the interval.
+ */
+export function useInterval(callback: () => void, delayMs: number | false | null): void {
+    const savedCallback = React.useRef(callback);
 
     // Remember the latest callback.
     React.useEffect(() => {
@@ -12,26 +15,15 @@ export function useInterval(callback: () => void, delayMs: number): void {
 
     // Set up the interval.
     React.useEffect(() => {
-        function tick() {
+        const tick = () => {
             savedCallback.current();
-        }
-        if (delayMs !== null) {
+        };
+
+        if (delayMs != null && delayMs !== false) {
             const id = setInterval(tick, delayMs);
             return () => clearInterval(id);
         }
     }, [delayMs]);
-}
-
-export function useFunction<F extends AnyFunction>(func: F): F {
-    const savedFn = React.useRef<F>(func);
-    const wrapper = React.useRef<F>(((...args: unknown[]): unknown =>
-        savedFn.current(...args)) as any);
-
-    React.useEffect(() => {
-        savedFn.current = func;
-    }, [func]);
-
-    return wrapper.current;
 }
 
 export function joinClassnames(...classes: Array<{ [key: string]: boolean } | string>): string {
@@ -50,4 +42,20 @@ export function joinClassnames(...classes: Array<{ [key: string]: boolean } | st
     }
 
     return usedClasses.join(" ");
+}
+
+export function useResize(ref: HTMLElement | null, callback: () => void): void {
+    const savedCallback = React.useRef(callback);
+    React.useEffect(() => {
+        savedCallback.current = callback;
+    }, [callback]);
+
+    React.useEffect(() => {
+        const currentCanvas = ref;
+        if (currentCanvas != null) {
+            const listener = () => savedCallback.current();
+            currentCanvas.addEventListener("resize", listener);
+            return () => currentCanvas.removeEventListener("resize", listener);
+        }
+    }, [ref]);
 }

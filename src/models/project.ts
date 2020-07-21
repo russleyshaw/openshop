@@ -3,6 +3,8 @@ import { observable, computed, action } from "mobx";
 import { LayerModel } from "./layer";
 import { RGBA } from "../common/colors";
 import { getNextName } from "../common/util";
+import { Point } from "../common/point";
+import { PaletteModel } from "./palette";
 
 export enum Tool {
     Select,
@@ -40,6 +42,11 @@ export class ProjectModel {
     ///////////////////////////////////////////////////////////////////////////
     /// Layers
     ///////////////////////////////////////////////////////////////////////////
+    cursor: Point = [0, 0];
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// Layers
+    ///////////////////////////////////////////////////////////////////////////
 
     @observable
     layers: LayerModel[] = [];
@@ -47,21 +54,18 @@ export class ProjectModel {
     @observable
     selectedLayerUuid?: string;
 
+    @observable
+    palette = new PaletteModel();
+
     ///////////////////////////////////////////////////////////////////////////
     /// Colors
     ///////////////////////////////////////////////////////////////////////////
 
     @observable
-    primaryColor: RGBA = [0, 0, 0, 255];
+    primaryColor: RGBA = [0.5, 0.4, 0.3, 1];
 
     @observable
-    secondaryColor: RGBA = [255, 255, 255, 255];
-
-    @observable
-    palettes: PaletteEntry[] = [];
-
-    @observable
-    selectedPaletteUuid?: string;
+    secondaryColor: RGBA = [0, 0, 0, 1];
 
     ///////////////////////////////////////////////////////////////////////////
     /// Tool States
@@ -148,33 +152,8 @@ export class ProjectModel {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    /// Palette Functions
+    /// Other
     ///////////////////////////////////////////////////////////////////////////
-
-    @action
-    addPalette(color: RGBA): PaletteEntry {
-        const newPalette: PaletteEntry = {
-            uuid: uuidv4(),
-            color: [...color],
-        };
-        this.palettes.push(newPalette);
-        return newPalette;
-    }
-
-    @action
-    setSelectedPalette(uuid: string): void {
-        if (!this.palettes.some(l => l.uuid === uuid)) {
-            throw new Error(`Provided UUID does not match any palette UUIDs. Provided: ${uuid}`);
-        }
-
-        console.log("Set Selected Palette", uuid);
-        this.selectedPaletteUuid = uuid;
-    }
-
-    @computed
-    get selectedPalette(): PaletteEntry | undefined {
-        return this.palettes.find(p => p.uuid === this.selectedPaletteUuid);
-    }
 
     markAllDirty(): void {
         for (let i = 0; i < this.dirtyPixels.length; i++) {

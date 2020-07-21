@@ -20,11 +20,6 @@ const GlobalStyle = createGlobalStyle`
 const model = new AppModel();
 const project = model.addNewEmptyProject();
 
-project.addPalette([0, 0, 0, 255]);
-project.addPalette([50, 25, 3, 255]);
-project.addPalette([4, 200, 100, 255]);
-project.addPalette([44, 44, 12, 255]);
-
 const layer = project.addNewEmptyLayer();
 
 function Root(): JSX.Element {

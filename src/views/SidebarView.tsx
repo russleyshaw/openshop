@@ -8,7 +8,6 @@ import { Button, Colors, Slider, Label } from "@blueprintjs/core";
 
 import LayerEntryView from "./LayerEntryView";
 import { IconNames } from "@blueprintjs/icons";
-import ColorSquare from "../components/ColorSquare";
 
 const RootDiv = styled.div`
     display: flex;
@@ -151,37 +150,6 @@ export default observer((props: SidebarViewProps) => {
                             />
                         </Label>
                     </SliderDiv>
-                </React.Fragment>
-            )}
-
-            {project.palettes.length > 0 && (
-                <React.Fragment>
-                    <PalettesHeaderDiv>
-                        <div style={{ gridArea: "title" }}>Palettes</div>
-                        <Button
-                            style={{ gridArea: "add" }}
-                            small
-                            icon={IconNames.PLUS}
-                            title="Add new pallete"
-                        />
-                        <Button
-                            disabled={project.selectedPaletteUuid == null}
-                            style={{ gridArea: "delete" }}
-                            small
-                            icon={IconNames.TRASH}
-                            title="Delete selected palette"
-                        />
-                    </PalettesHeaderDiv>
-                    <PalettesDiv>
-                        {project.palettes.map((p, idx) => (
-                            <ColorSquare
-                                selected={p.uuid === project.selectedPaletteUuid}
-                                onClick={() => project.setSelectedPalette(p.uuid)}
-                                key={p.uuid}
-                                color={p.color}
-                            />
-                        ))}
-                    </PalettesDiv>
                 </React.Fragment>
             )}
 

@@ -2,14 +2,14 @@ import * as React from "react";
 import { observer } from "mobx-react";
 import { useDrag } from "react-dnd";
 
-import { RGBA, rgbToCss } from "../common/colors";
+import { RGBA, rgbToCss, RGB } from "../common/colors";
 import styled from "styled-components";
 import { AlphaBackdropDiv } from "./alpha_backdrop";
 import { PaletteColorItem, ITEM_TYPES } from "../common/dnd";
 import { Colors } from "@blueprintjs/core";
 
 export interface ColorSquareProps {
-    color: RGBA;
+    color: RGB | RGBA;
     selected?: boolean;
     onClick?: React.MouseEventHandler;
 }
@@ -35,22 +35,12 @@ const SquareDiv = styled.div`
 `;
 
 export default observer((props: ColorSquareProps) => {
-    const [{ opacity }, dragRef] = useDrag<PaletteColorItem, unknown, { opacity: number }>({
-        item: { type: ITEM_TYPES.paletteColor, color: props.color },
-        collect(monitor) {
-            return { opacity: monitor.isDragging() ? 0.5 : 1 };
-        },
-    });
+    const cssColor = rgbToCss(props.color);
 
     return (
-        <RootDiv
-            selected={props.selected ?? false}
-            onClick={props.onClick}
-            ref={dragRef}
-            style={{ opacity }}
-        >
+        <RootDiv title={cssColor} selected={props.selected ?? false} onClick={props.onClick}>
             <BackdropDiv>
-                <SquareDiv style={{ backgroundColor: rgbToCss(props.color) }}></SquareDiv>
+                <SquareDiv style={{ backgroundColor: cssColor }}></SquareDiv>
             </BackdropDiv>
         </RootDiv>
     );

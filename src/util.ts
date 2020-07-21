@@ -68,20 +68,20 @@ export function blendImageDataLayersNormal(
             bIdx = i + 2;
             aIdx = i + 3;
 
-            outA = layer.data[aIdx] + out.data[aIdx] * (255 - layer.data[aIdx]);
+            outA = layer.data[aIdx] + out.data[aIdx] * (1.0 - layer.data[aIdx]);
 
             if (outA !== 0) {
                 out.data[rIdx] =
                     (layer.data[rIdx] * layer.data[aIdx] +
-                        out.data[rIdx] * out.data[aIdx] * (255 - layer.data[aIdx])) /
+                        out.data[rIdx] * out.data[aIdx] * (1.0 - layer.data[aIdx])) /
                     outA;
                 out.data[gIdx] =
                     (layer.data[gIdx] * layer.data[aIdx] +
-                        out.data[gIdx] * out.data[aIdx] * (255 - layer.data[aIdx])) /
+                        out.data[gIdx] * out.data[aIdx] * (1.0 - layer.data[aIdx])) /
                     outA;
                 out.data[bIdx] =
                     (layer.data[bIdx] * layer.data[aIdx] +
-                        out.data[bIdx] * out.data[aIdx] * (255 - layer.data[aIdx])) /
+                        out.data[bIdx] * out.data[aIdx] * (1.0 - layer.data[aIdx])) /
                     outA;
             } else {
                 out.data[rIdx] = 0;

@@ -1,6 +1,5 @@
 import * as React from "react";
 import styled from "styled-components";
-import { SizeMe } from "react-sizeme";
 
 import { asNotNil, delayMs, blendImageDataLayersNormal } from "../util";
 import { AppModel } from "../models/app";
