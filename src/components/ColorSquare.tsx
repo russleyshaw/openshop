@@ -36,6 +36,7 @@ const SquareDiv = styled.div`
 
 export default observer((props: ColorSquareProps) => {
     const cssColor = rgbToCss(props.color);
+    console.log("CSS", cssColor);
 
     return (
         <RootDiv title={cssColor} selected={props.selected ?? false} onClick={props.onClick}>

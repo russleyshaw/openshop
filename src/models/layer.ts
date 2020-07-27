@@ -4,6 +4,7 @@ import { fillImageData } from "../util";
 import { Point, calcLine } from "../common/point";
 import { Notifier } from "../common/notifier";
 import { RGBA } from "../common/colors";
+import { F32ImageData } from "./f32_image_data";
 
 export interface LayerModelArgs {
     width: number;
@@ -23,12 +24,12 @@ export class LayerModel {
     @observable
     opacity = 1;
 
-    image: Notifier<ImageData>;
+    image: Notifier<F32ImageData>;
 
     constructor(args: LayerModelArgs) {
         this.uuid = uuidv4();
         this.name = args.name ?? this.uuid;
-        this.image = new Notifier(new ImageData(args.width, args.height));
+        this.image = new Notifier(new F32ImageData(args.width, args.height));
     }
 
     drawPoint(point: Point, color: RGBA, size: number, dirtyPixels: boolean[]): void {

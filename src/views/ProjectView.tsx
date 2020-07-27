@@ -3,10 +3,10 @@ import styled from "styled-components";
 import { observer } from "mobx-react";
 
 import ToolboxView from "./ToolboxView";
-import { ProjectStageView } from "./project_stage";
 import { AppModel } from "../models/app";
 import { ProjectModel } from "../models/project";
 import SidebarView from "./SidebarView";
+import StageView from "./StageView";
 
 const RootDiv = styled.div`
     flex: 1 1 auto;
@@ -26,7 +26,7 @@ export default observer((props: ProjectViewProps) => {
     return (
         <RootDiv>
             <ToolboxView project={project} />
-            <ProjectStageView app={app} project={project} />
+            <StageView project={project} app={app} />
             <SidebarView project={project} />
         </RootDiv>
     );

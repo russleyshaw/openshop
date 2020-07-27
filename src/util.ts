@@ -1,5 +1,6 @@
 import { Point } from "./common/point";
 import { Vec4 } from "./common/vec";
+import { F32ImageData } from "./models/f32_image_data";
 
 export async function delayMs(ms: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, ms));
@@ -105,7 +106,7 @@ export function isPowerOf2(value: number): boolean {
 }
 
 export function fillImageData(
-    img: ImageData,
+    img: F32ImageData,
     source: Point,
     color: Vec4,
     tolerance: number,

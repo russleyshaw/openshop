@@ -59,3 +59,11 @@ export function useResize(ref: HTMLElement | null, callback: () => void): void {
         }
     }, [ref]);
 }
+
+export function useRefFn<T>(initialValue: () => T): React.MutableRefObject<T> {
+    const [ref] = React.useState(() => ({
+        current: initialValue(),
+    }));
+
+    return ref;
+}

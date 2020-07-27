@@ -81,6 +81,13 @@ export function hslToRgb(hsl: HSL | HSLA, out: RGB | RGBA): void {
     // m = L - C/2
     const m = hsl[2] - c / 2;
 
+    while (hsl[0] > 360) {
+        hsl[0] -= 360;
+    }
+    while (hsl[0] < 0) {
+        hsl[0] += 360;
+    }
+
     let primes: Vec3;
     if (0 <= hsl[0] && hsl[0] < 60) {
         primes = [c, x, 0];

@@ -65,7 +65,7 @@ export class ProjectModel {
     primaryColor: RGBA = [0.5, 0.4, 0.3, 1];
 
     @observable
-    secondaryColor: RGBA = [0, 0, 0, 1];
+    secondaryColor: RGBA = [0.2, 0.3, 0.9, 1];
 
     ///////////////////////////////////////////////////////////////////////////
     /// Tool States

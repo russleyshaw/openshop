@@ -15,7 +15,10 @@ module.exports = (_, args) => {
     const plugins = [
         new HtmlWebpackPlugin({ template: "./src/index.html" }),
         new ForkTsCheckerPlugin(),
-        new MiniCssExtractPlugin(),
+        new MiniCssExtractPlugin({
+            filename: isDevMode ? "[name].css" : "[name].[hash].css",
+            chunkFilename: isDevMode ? "[id].css" : "[id].[hash].css",
+        }),
     ];
 
     const alias = {};
@@ -39,6 +42,14 @@ module.exports = (_, args) => {
             })
         );
     }
+
+    const styleLoader = {
+        loader: MiniCssExtractPlugin.loader,
+        options: {
+            esModule: true,
+            hmr: isDevMode,
+        },
+    };
 
     return {
         mode,
@@ -75,12 +86,7 @@ module.exports = (_, args) => {
                     test: /\.css$/i,
                     use: [
                         // Creates `style` nodes from JS strings
-                        {
-                            loader: MiniCssExtractPlugin.loader,
-                            options: {
-                                esModule: true,
-                            },
-                        },
+                        styleLoader,
                         // Translates CSS into CommonJS
                         "css-loader",
                     ],
@@ -89,12 +95,7 @@ module.exports = (_, args) => {
                     test: /\.s[ac]ss$/i,
                     use: [
                         // Creates `style` nodes from JS strings
-                        {
-                            loader: MiniCssExtractPlugin.loader,
-                            options: {
-                                esModule: true,
-                            },
-                        },
+                        styleLoader,
                         // Translates CSS into CommonJS
                         "css-loader",
                         // Compiles Sass to CSS

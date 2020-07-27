@@ -17,3 +17,7 @@ export function getNextName(template: string, names: string[]): string {
 
     return template.replace("#", nextId.toString());
 }
+
+export function isPowerOf2(value: number): boolean {
+    return (value & (value - 1)) == 0;
+}

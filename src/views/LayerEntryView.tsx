@@ -9,6 +9,7 @@ import { LayerModel } from "../models/layer";
 import { AlphaBackdropDiv } from "../components/alpha_backdrop";
 import { useNotify } from "../common/notifier";
 import { IconNames } from "@blueprintjs/icons";
+import { F32ImageData } from "../models/f32_image_data";
 
 export interface LayerViewProps {
     project: ProjectModel;
@@ -37,6 +38,16 @@ const LayerName = styled.div`
     text-overflow: ellipsis;
     overflow: hidden;
 `;
+
+const draw = throttle((canvas: HTMLCanvasElement | null, image: F32ImageData) => {
+    const ref = canvas;
+    if (ref == null) return;
+    const ctx = ref.getContext("2d");
+    if (ctx == null) return;
+
+    ctx.clearRect(0, 0, ref.width, ref.height);
+    ctx.putImageData(image.toImageData(), 0, 0);
+}, 1000);
 
 export default observer((props: LayerViewProps) => {
     const { project, layer } = props;
@@ -84,13 +95,3 @@ export default observer((props: LayerViewProps) => {
         </RootDiv>
     );
 });
-
-const draw = throttle((canvas: HTMLCanvasElement | null, image: ImageData) => {
-    const ref = canvas;
-    if (ref == null) return;
-    const ctx = ref.getContext("2d");
-    if (ctx == null) return;
-
-    ctx.clearRect(0, 0, ref.width, ref.height);
-    ctx.putImageData(image, 0, 0);
-}, 1000);
