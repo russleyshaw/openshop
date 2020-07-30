@@ -67,8 +67,8 @@ export class LayerModel {
         let pixelIdx = 0;
         let rgbaIdx = 0;
 
-        for (let y = point[1]; y <= point[1] + size; y++) {
-            for (let x = point[0]; x <= point[0] + size; x++) {
+        for (let y = Math.floor(point[1]); y <= Math.floor(point[1] + size); y++) {
+            for (let x = Math.floor(point[0]); x <= Math.floor(point[0] + size); x++) {
                 pixelIdx = y * image.width + x;
                 rgbaIdx = pixelIdx * 4;
 

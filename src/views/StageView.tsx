@@ -1,13 +1,13 @@
 import * as React from "react";
 import styled from "styled-components";
 import { AppModel } from "../models/app";
-import { ProjectModel } from "../models/project";
-import { loadShader, loadTexture, WebGLContext } from "../common/webgl";
+import { ProjectModel, Tool } from "../models/project";
+import { GlShader, WebGLContext, GlTexture, GlProgram, GlShaderType } from "../common/webgl";
 import { mat4 } from "gl-matrix";
-import { asNotNil } from "../util";
+import { asNotNil, delayMs } from "../util";
 
-import fsSource from "../shaders/fs.glsl";
-import vsSource from "../shaders/vs.glsl";
+import { Point } from "../common/point";
+import { throttle } from "lodash";
 
 const RootDiv = styled.div`
     flex: 1 1 auto;
@@ -26,34 +26,47 @@ export interface StageViewProps {
     project: ProjectModel;
 }
 
-interface GlContext {
-    shaderProgram: WebGLProgram;
+interface GlState {
+    background: {
+        program: GlProgram;
 
-    bPosition: WebGLBuffer;
-    bTextureCoord: WebGLBuffer;
+        bVertexPositions: WebGLBuffer;
 
-    tTexture: WebGLTexture;
+        aVertexPosition: number;
 
-    aVertexPosition: number;
-    aTextureCoord: number;
+        uProjectionMatrix: WebGLUniformLocation;
+        uModelViewMatrix: WebGLUniformLocation;
+    };
+    scene: {
+        program: GlProgram;
 
-    uProjectionMatrix: WebGLUniformLocation;
-    uModelViewMatrix: WebGLUniformLocation;
-    uSampler: WebGLUniformLocation;
+        bVertexPositions: WebGLBuffer;
+        bTextureCoords: WebGLBuffer;
+
+        tScene: GlTexture;
+
+        aVertexPosition: number;
+        aTextureCoord: number;
+
+        uProjectionMatrix: WebGLUniformLocation;
+        uModelViewMatrix: WebGLUniformLocation;
+        uSampler: WebGLUniformLocation;
+    };
 }
 
 export default class StageView extends React.Component<StageViewProps> {
     rootRef: HTMLDivElement | null = null;
     stageRef: HTMLCanvasElement | null = null;
-    glContext?: GlContext;
+    glState?: GlState;
 
-    drawInterval?: number;
-    resizeListener?: unknown;
+    isDrawing: boolean = false;
 
+    stageImage: ImageData;
     projectionMatrix = mat4.create();
     modelViewMatrix = mat4.create();
 
-    stageImage: ImageData;
+    isMouseDown: boolean = false;
+    mouseCanvasPosition: Point = [0, 0];
 
     constructor(props: StageViewProps) {
         super(props);
@@ -65,20 +78,13 @@ export default class StageView extends React.Component<StageViewProps> {
     // React Lifecycle
     ///////////////////////////////////////////////////////////////////////////
 
-    componentDidMount(): void {
-        this.drawInterval = setInterval(() => this.draw(), 250);
-    }
-
-    componentWillUnmount(): void {
-        clearInterval(this.drawInterval);
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Event Handlers
     ///////////////////////////////////////////////////////////////////////////
 
     onStageRef = (ref: HTMLCanvasElement | null): void => {
         this.stageRef = ref;
+        void delayMs(500).then(() => this.startDrawing());
     };
 
     onRootRef = (ref: HTMLDivElement | null): void => {
@@ -99,224 +105,348 @@ export default class StageView extends React.Component<StageViewProps> {
         const canvasY = event.clientY - bbox.top;
 
         layer.drawPoint(
-            [Math.floor(canvasX), Math.floor(canvasY)],
+            [canvasX, canvasY],
             project.primaryColor,
-            10,
+            project.pencilSize,
             project.dirtyPixels
         );
+
+        this.updateStageImage();
     };
 
-    getImage(): ImageData {
-        const project = this.props.project;
-        const layer = project.selectedLayer;
-        if (layer == null) {
-            return this.stageImage;
-        }
+    onStageMouseDown: React.MouseEventHandler<HTMLCanvasElement> = event => {
+        this.isMouseDown = true;
 
-        let pixelIdx = 0;
-        for (let y = 0; y < project.height; y++) {
-            for (let x = 0; x < project.width; x++) {
-                pixelIdx = (y * project.width + x) * 4;
-                this.stageImage.data[pixelIdx + 0] = Math.floor(
-                    layer.image.value.data[pixelIdx + 0] * 255
-                );
-                this.stageImage.data[pixelIdx + 1] = Math.floor(
-                    layer.image.value.data[pixelIdx + 1] * 255
-                );
-                this.stageImage.data[pixelIdx + 2] = Math.floor(
-                    layer.image.value.data[pixelIdx + 2] * 255
-                );
-                this.stageImage.data[pixelIdx + 3] = Math.floor(
-                    layer.image.value.data[pixelIdx + 3] * 255
+        const bbox = event.currentTarget.getBoundingClientRect();
+
+        const canvasX = event.clientX - bbox.left;
+        const canvasY = event.clientY - bbox.top;
+
+        this.mouseCanvasPosition[0] = canvasX;
+        this.mouseCanvasPosition[1] = canvasY;
+    };
+
+    onStageMouseUp: React.MouseEventHandler<HTMLCanvasElement> = event => {
+        this.isMouseDown = false;
+
+        const bbox = event.currentTarget.getBoundingClientRect();
+
+        const canvasX = event.clientX - bbox.left;
+        const canvasY = event.clientY - bbox.top;
+
+        this.mouseCanvasPosition[0] = canvasX;
+        this.mouseCanvasPosition[1] = canvasY;
+    };
+
+    onStageMouseMove: React.MouseEventHandler<HTMLCanvasElement> = event => {
+        const bbox = event.currentTarget.getBoundingClientRect();
+
+        const project = this.props.project;
+        const canvasX = event.clientX - bbox.left;
+        const canvasY = event.clientY - bbox.top;
+
+        if (this.isMouseDown && project.selectedTool === Tool.Pencil) {
+            const layer = project.selectedLayer;
+            if (layer != null) {
+                layer.drawLine(
+                    this.mouseCanvasPosition,
+                    [canvasX, canvasY],
+                    project.primaryColor,
+                    project.pencilSize,
+                    project.dirtyPixels
                 );
             }
         }
-        return this.stageImage;
+
+        this.mouseCanvasPosition[0] = canvasX;
+        this.mouseCanvasPosition[1] = canvasY;
+
+        this.throttledUpdateStageImage();
+    };
+
+    throttledUpdateStageImage = throttle(() => this.updateStageImage(), 1000 / 24, {
+        leading: true,
+        trailing: true,
+    });
+
+    updateStageImage(): void {
+        const project = this.props.project;
+        const layer = project.selectedLayer;
+        if (layer == null) {
+            return;
+        }
+
+        let pixelIdx = 0;
+        let subPixelIdx = 0;
+        for (let y = 0; y < project.height; y++) {
+            for (let x = 0; x < project.width; x++) {
+                pixelIdx = y * project.width + x;
+                subPixelIdx = pixelIdx * 4;
+
+                if (project.dirtyPixels[pixelIdx]) {
+                    this.stageImage.data[subPixelIdx + 0] = Math.floor(
+                        layer.image.value.data[subPixelIdx + 0] * 255
+                    );
+                    this.stageImage.data[subPixelIdx + 1] = Math.floor(
+                        layer.image.value.data[subPixelIdx + 1] * 255
+                    );
+                    this.stageImage.data[subPixelIdx + 2] = Math.floor(
+                        layer.image.value.data[subPixelIdx + 2] * 255
+                    );
+                    this.stageImage.data[subPixelIdx + 3] = Math.floor(
+                        layer.image.value.data[subPixelIdx + 3] * 255
+                    );
+                    project.dirtyPixels[pixelIdx] = false;
+                }
+            }
+        }
+
+        const ctx = this.glState;
+        if (ctx != null) {
+            ctx.scene.tScene.setImageData(this.stageImage);
+        }
     }
 
-    draw(): void {
+    async startDrawing() {
         const stageRef = this.stageRef;
         if (stageRef == null) return;
+
         const rootRef = this.rootRef;
         if (rootRef == null) return;
 
-        const gl = this._getGlContext(stageRef);
+        const gl = this.getGlContext(stageRef);
         if (gl == null) return;
 
-        if (this.glContext == null) {
-            this._init(stageRef, gl);
-        }
+        const state = this.glState ?? (await this.initState(rootRef, stageRef, gl));
 
-        if (this.glContext != null) {
-            this._draw(rootRef, stageRef, gl, this.glContext);
-        }
+        this.isDrawing = true;
+
+        const doDraw = () => {
+            this.draw(rootRef, stageRef, gl, state);
+            if (this.isDrawing) {
+                requestAnimationFrame(doDraw);
+            }
+        };
+        requestAnimationFrame(doDraw);
     }
 
     render(): JSX.Element {
         return (
             <RootDiv ref={this.onRootRef}>
-                <StageCanvas onClick={this.onStageClick} ref={this.onStageRef} />
+                <StageCanvas
+                    onMouseDown={this.onStageMouseDown}
+                    onMouseUp={this.onStageMouseUp}
+                    onMouseMove={this.onStageMouseMove}
+                    onClick={this.onStageClick}
+                    ref={this.onStageRef}
+                />
             </RootDiv>
         );
     }
 
-    private _getGlContext(ref: HTMLCanvasElement) {
-        return ref.getContext("webgl2");
+    private getGlContext(ref: HTMLCanvasElement) {
+        return ref.getContext("webgl2", { alpha: true });
     }
 
-    private _init(ref: HTMLCanvasElement, gl: WebGLContext): void {
-        const label = "StageView.init";
-        console.time(label);
+    private async initState(
+        rootRef: HTMLDivElement,
+        stageRef: HTMLCanvasElement,
+        gl: WebGLContext
+    ): Promise<GlState> {
+        const bgVShader = await GlShader.load(
+            gl,
+            GlShaderType.VERTEX,
+            import("../shaders/background_vs.glsl")
+        );
+        const bgFShader = await GlShader.load(
+            gl,
+            GlShaderType.FRAGMENT,
+            import("../shaders/background_fs.glsl")
+        );
+        const bgProgram = new GlProgram(gl, bgVShader, bgFShader);
 
-        const vShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-        const fShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+        const sceneVShader = await GlShader.load(
+            gl,
+            GlShaderType.VERTEX,
+            import("../shaders/scene_vs.glsl")
+        );
+        const sceneFShader = await GlShader.load(
+            gl,
+            GlShaderType.FRAGMENT,
+            import("../shaders/scene_fs.glsl")
+        );
+        const sceneProgram = new GlProgram(gl, sceneVShader, sceneFShader);
 
-        const shaderProgram = asNotNil(gl.createProgram());
-        gl.attachShader(shaderProgram, vShader);
-        gl.attachShader(shaderProgram, fShader);
-        gl.linkProgram(shaderProgram);
-
-        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            const programMsg = gl.getProgramInfoLog(shaderProgram) ?? "";
-            gl.deleteProgram(shaderProgram);
-            throw new Error(`Unable to initialize the shader program: ${programMsg}`);
-        }
-
-        const positionBuffer = asNotNil(gl.createBuffer());
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        const bgVertexBuffer = asNotNil(gl.createBuffer());
+        gl.bindBuffer(gl.ARRAY_BUFFER, bgVertexBuffer);
         // prettier-ignore
-        const positions = [
-            0, this.props.project.height,
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            0,              stageRef.height,
+            stageRef.width, stageRef.height,
+            0,              0,
+            stageRef.width, 0,
+        ]), gl.STATIC_DRAW);
+
+        const sceneVb = asNotNil(gl.createBuffer());
+        gl.bindBuffer(gl.ARRAY_BUFFER, sceneVb);
+        // prettier-ignore
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            0,              this.props.project.height,
             this.props.project.width, this.props.project.height,
-            0, 0,
-            this.props.project.width,0
-        ];
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+            0,              0,
+            this.props.project.width, 0,
+        ]), gl.STATIC_DRAW);
 
-        const texture = loadTexture(gl, this.getImage());
-
-        const textureCoordBuffer = asNotNil(gl.createBuffer());
-        gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
+        const sceneTcb = asNotNil(gl.createBuffer());
+        gl.bindBuffer(gl.ARRAY_BUFFER, sceneTcb);
         // prettier-ignore
-        const textureCoordinates = [
-            // Front
-            0.0,  1.0,
-            1.0,  1.0,
-            0.0,  0.0,
-            1.0,  0.0,
-        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            0, 1,
+            1, 1,
+            0, 0,
+            1, 0,
+        ]), gl.STATIC_DRAW);
 
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
+        const tScene = new GlTexture(gl, this.stageImage);
 
-        mat4.ortho(this.projectionMatrix, 0, ref.clientWidth, ref.clientHeight, 0, -1, 1);
+        const state: GlState = {
+            background: {
+                program: bgProgram,
+                bVertexPositions: bgVertexBuffer,
+                aVertexPosition: bgProgram.getAttribLocation("aVertexPosition"),
+                uModelViewMatrix: bgProgram.getUniformLocation("uModelViewMatrix"),
+                uProjectionMatrix: bgProgram.getUniformLocation("uProjectionMatrix"),
+            },
+            scene: {
+                program: sceneProgram,
+                bVertexPositions: sceneVb,
+                bTextureCoords: sceneTcb,
 
-        this.glContext = {
-            shaderProgram,
-            bPosition: positionBuffer,
-            bTextureCoord: textureCoordBuffer,
+                tScene,
 
-            tTexture: texture,
+                aVertexPosition: sceneProgram.getAttribLocation("aVertexPosition"),
+                aTextureCoord: sceneProgram.getAttribLocation("aTextureCoord"),
 
-            aVertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
-            aTextureCoord: gl.getAttribLocation(shaderProgram, "aTextureCoord"),
-
-            uProjectionMatrix: asNotNil(gl.getUniformLocation(shaderProgram, "uProjectionMatrix")),
-            uModelViewMatrix: asNotNil(gl.getUniformLocation(shaderProgram, "uModelViewMatrix")),
-            uSampler: asNotNil(gl.getUniformLocation(shaderProgram, "uSampler")),
+                uModelViewMatrix: sceneProgram.getUniformLocation("uModelViewMatrix"),
+                uProjectionMatrix: sceneProgram.getUniformLocation("uProjectionMatrix"),
+                uSampler: sceneProgram.getUniformLocation("uSampler"),
+            },
         };
 
-        console.timeEnd(label);
+        mat4.translate(
+            this.modelViewMatrix, // destination matrix
+            this.modelViewMatrix, // matrix to translate
+            [0.0, 0.0, 0.0]
+        ); // amount to translate
+
+        mat4.ortho(this.projectionMatrix, 0, stageRef.width, stageRef.height, 0, -1, 1);
+
+        this.glState = state;
+        return state;
     }
 
-    private _draw(
+    private draw(
         rootRef: HTMLDivElement,
         stageRef: HTMLCanvasElement,
         gl: WebGLContext,
-        ctx: GlContext
+        state: GlState
     ): void {
-        const label = `StageView.draw (${stageRef.width}, ${stageRef.height})`;
-        console.time(label);
-
         if (stageRef.width !== rootRef.clientWidth || stageRef.height !== rootRef.clientHeight) {
             stageRef.width = rootRef.clientWidth;
             stageRef.height = rootRef.clientHeight;
-            gl.viewport(0, 0, stageRef.width, stageRef.height);
             mat4.ortho(this.projectionMatrix, 0, stageRef.width, stageRef.height, 0, -1, 1);
+            gl.viewport(0, 0, stageRef.width, stageRef.height);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, state.background.bVertexPositions);
+            // prettier-ignore
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                0,              stageRef.height,
+                stageRef.width, stageRef.height,
+                0,              0,
+                stageRef.width, 0,
+            ]), gl.STATIC_DRAW);
         }
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
         gl.clearDepth(1.0); // Clear everything
         gl.enable(gl.DEPTH_TEST); // Enable depth testing
+        gl.enable(gl.BLEND);
         gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
         // Clear the canvas before we start drawing on it.
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // Tell WebGL how to pull out the positions from the position
-        // buffer into the vertexPosition attribute.
+        this.drawBg(gl, state);
+        this.drawScene(gl, state);
+    }
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, ctx.bPosition);
+    private drawBg(gl: WebGLContext, state: GlState) {
+        const myCtx = state.background;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, myCtx.bVertexPositions);
         gl.vertexAttribPointer(
-            ctx.aVertexPosition,
+            myCtx.aVertexPosition,
             2, // numComponents
             gl.FLOAT, // type
             false, // normalize
             0, // stride
             0 // offset
         );
-        gl.enableVertexAttribArray(ctx.aVertexPosition);
+        gl.enableVertexAttribArray(myCtx.aVertexPosition);
 
-        // Tell WebGL how to pull out the texture coordinates from
-        // the texture coordinate buffer into the textureCoord attribute.
+        myCtx.program.use();
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, ctx.bTextureCoord);
-        gl.vertexAttribPointer(
-            ctx.aTextureCoord,
-            2, // numComponents
-            gl.FLOAT, // type
-            false, // normalize
-            0, // stride
-            0 // offset
-        );
-        gl.enableVertexAttribArray(ctx.aTextureCoord);
-
-        // Tell WebGL to use our program when drawing
-
-        gl.useProgram(ctx.shaderProgram);
-
-        // Set the shader uniforms
-
-        gl.uniformMatrix4fv(ctx.uProjectionMatrix, false, this.projectionMatrix);
-        gl.uniformMatrix4fv(ctx.uModelViewMatrix, false, this.modelViewMatrix);
-
-        // Tell WebGL we want to affect texture unit 0
-        gl.activeTexture(gl.TEXTURE0);
-
-        // Bind the texture to texture unit 0
-        gl.bindTexture(gl.TEXTURE_2D, ctx.tTexture);
-        const img = this.getImage();
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            0,
-            gl.RGBA,
-            img.width,
-            img.height,
-            0,
-            gl.RGBA,
-            gl.UNSIGNED_BYTE,
-            img.data
-        );
-
-        // Tell the shader we bound the texture to texture unit 0
-        gl.uniform1i(ctx.uSampler, 0);
+        gl.uniformMatrix4fv(myCtx.uProjectionMatrix, false, this.projectionMatrix);
+        gl.uniformMatrix4fv(myCtx.uModelViewMatrix, false, this.modelViewMatrix);
 
         gl.drawArrays(
             gl.TRIANGLE_STRIP,
             0, // offset
             4 // vertexCount
         );
+    }
 
-        console.timeEnd(label);
+    private drawScene(gl: WebGLContext, state: GlState) {
+        const myCtx = state.scene;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, myCtx.bVertexPositions);
+        gl.vertexAttribPointer(
+            myCtx.aVertexPosition,
+            2, // numComponents
+            gl.FLOAT, // type
+            false, // normalize
+            0, // stride
+            0 // offset
+        );
+        gl.enableVertexAttribArray(myCtx.aVertexPosition);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, myCtx.bTextureCoords);
+        gl.vertexAttribPointer(
+            myCtx.aTextureCoord,
+            2, // numComponents
+            gl.FLOAT, // type
+            false, // normalize
+            0, // stride
+            0 // offset
+        );
+        gl.enableVertexAttribArray(myCtx.aTextureCoord);
+
+        myCtx.program.use();
+
+        gl.uniformMatrix4fv(myCtx.uProjectionMatrix, false, this.projectionMatrix);
+        gl.uniformMatrix4fv(myCtx.uModelViewMatrix, false, this.modelViewMatrix);
+
+        gl.activeTexture(gl.TEXTURE0);
+        myCtx.tScene.bind();
+
+        gl.uniform1i(myCtx.uSampler, 0);
+
+        gl.drawArrays(
+            gl.TRIANGLE_STRIP,
+            0, // offset
+            4 // vertexCount
+        );
     }
 }

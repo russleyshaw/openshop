@@ -13,6 +13,14 @@ export class Interval {
         return this._intervalId != null;
     }
 
+    set ms(ms: number) {
+        this._ms = ms;
+        if (this.running) {
+            clearInterval(this._intervalId);
+            this._intervalId = setInterval(this._cb, this._ms);
+        }
+    }
+
     start(): void {
         if (!this.running) {
             this._intervalId = setInterval(this._cb, this._ms);
