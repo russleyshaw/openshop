@@ -65,17 +65,23 @@ export class LayerModel {
         const image = this.image.value;
 
         let pixelIdx = 0;
-        let rgbaIdx = 0;
+        let subPixelIdx = 0;
 
-        for (let y = Math.floor(point[1]); y <= Math.floor(point[1] + size); y++) {
-            for (let x = Math.floor(point[0]); x <= Math.floor(point[0] + size); x++) {
+        const halfSize = size / 2;
+
+        for (let y = Math.round(point[1] - halfSize); y <= Math.round(point[1] + halfSize); y++) {
+            for (
+                let x = Math.round(point[0] - halfSize);
+                x <= Math.round(point[0] + halfSize);
+                x++
+            ) {
                 pixelIdx = y * image.width + x;
-                rgbaIdx = pixelIdx * 4;
+                subPixelIdx = pixelIdx * 4;
 
-                image.data[rgbaIdx + 0] = color[0];
-                image.data[rgbaIdx + 1] = color[1];
-                image.data[rgbaIdx + 2] = color[2];
-                image.data[rgbaIdx + 3] = color[3];
+                image.data[subPixelIdx + 0] = color[0];
+                image.data[subPixelIdx + 1] = color[1];
+                image.data[subPixelIdx + 2] = color[2];
+                image.data[subPixelIdx + 3] = color[3];
 
                 dirtyPixels[pixelIdx] = true;
             }

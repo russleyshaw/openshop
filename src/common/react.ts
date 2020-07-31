@@ -67,3 +67,7 @@ export function useRefFn<T>(initialValue: () => T): React.MutableRefObject<T> {
 
     return ref;
 }
+
+// export function useObjState<T extends {}>(initialValue: T): [T, (obj: Partial<T>) => void] {
+//     const
+// }

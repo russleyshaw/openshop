@@ -161,13 +161,12 @@ export default class StageView extends React.Component<StageViewProps> {
         this.mouseCanvasPosition[0] = canvasX;
         this.mouseCanvasPosition[1] = canvasY;
 
-        this.throttledUpdateStageImage();
+        this.updateStageImage();
     };
 
-    throttledUpdateStageImage = throttle(() => this.updateStageImage(), 1000 / 24, {
-        leading: true,
-        trailing: true,
-    });
+    onStagePointerMove: React.PointerEventHandler<HTMLCanvasElement> = event => {
+        console.log(event.tiltX, event.tiltY);
+    };
 
     updateStageImage(): void {
         const project = this.props.project;
@@ -234,6 +233,7 @@ export default class StageView extends React.Component<StageViewProps> {
         return (
             <RootDiv ref={this.onRootRef}>
                 <StageCanvas
+                    onPointerMove={this.onStagePointerMove}
                     onMouseDown={this.onStageMouseDown}
                     onMouseUp={this.onStageMouseUp}
                     onMouseMove={this.onStageMouseMove}
@@ -281,10 +281,10 @@ export default class StageView extends React.Component<StageViewProps> {
         gl.bindBuffer(gl.ARRAY_BUFFER, bgVertexBuffer);
         // prettier-ignore
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            0,              stageRef.height,
-            stageRef.width, stageRef.height,
+            0,              this.props.project.height,
+            this.props.project.width, this.props.project.height,
             0,              0,
-            stageRef.width, 0,
+            this.props.project.width, 0,
         ]), gl.STATIC_DRAW);
 
         const sceneVb = asNotNil(gl.createBuffer());
@@ -356,18 +356,9 @@ export default class StageView extends React.Component<StageViewProps> {
             stageRef.height = rootRef.clientHeight;
             mat4.ortho(this.projectionMatrix, 0, stageRef.width, stageRef.height, 0, -1, 1);
             gl.viewport(0, 0, stageRef.width, stageRef.height);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, state.background.bVertexPositions);
-            // prettier-ignore
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                0,              stageRef.height,
-                stageRef.width, stageRef.height,
-                0,              0,
-                stageRef.width, 0,
-            ]), gl.STATIC_DRAW);
         }
 
-        gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
+        gl.clearColor(0.0, 0.0, 0.0, 0.0); // Clear to black, fully opaque
         gl.clearDepth(1.0); // Clear everything
         gl.enable(gl.DEPTH_TEST); // Enable depth testing
         gl.enable(gl.BLEND);

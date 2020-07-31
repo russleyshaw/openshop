@@ -21,3 +21,13 @@ export function getNextName(template: string, names: string[]): string {
 export function isPowerOf2(value: number): boolean {
     return (value & (value - 1)) == 0;
 }
+
+export function mapRange(
+    value: number,
+    minValue: number,
+    maxValue: number,
+    minOut: number,
+    maxOut: number
+): number {
+    return ((value - minValue) * (maxOut - minOut)) / (maxValue - minValue) + minOut;
+}
