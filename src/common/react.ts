@@ -71,3 +71,8 @@ export function useRefFn<T>(initialValue: () => T): React.MutableRefObject<T> {
 // export function useObjState<T extends {}>(initialValue: T): [T, (obj: Partial<T>) => void] {
 //     const
 // }
+
+export interface MouseEventLayers {
+    layerX?: number;
+    layerY?: number;
+}

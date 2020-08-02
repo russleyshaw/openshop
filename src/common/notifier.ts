@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Subscriber<T> = (value: T) => void;
 type Unsubscriber = () => void;
@@ -55,4 +55,22 @@ export function useNotify<T>(notifier: Notifier<T>, callback: Subscriber<T>): vo
             unsubscriber();
         };
     }, [notifier]);
+}
+
+export function useNotifyState<T>(initialValue: () => T, callback: Subscriber<T>): Notifier<T> {
+    const [notifier] = useState(() => new Notifier(initialValue()));
+
+    const savedCallback = useRef(callback);
+    useEffect(() => {
+        savedCallback.current = callback;
+    }, [callback]);
+
+    useEffect(() => {
+        const unsubscriber = notifier.subscribe(v => savedCallback.current(v));
+        return () => {
+            unsubscriber();
+        };
+    }, [notifier]);
+
+    return notifier;
 }

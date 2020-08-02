@@ -165,7 +165,7 @@ export default class StageView extends React.Component<StageViewProps> {
     };
 
     onStagePointerMove: React.PointerEventHandler<HTMLCanvasElement> = event => {
-        console.log(event.tiltX, event.tiltY);
+        console.log(`Tilt: (${event.tiltX}, ${event.tiltY} Pressure: ${event.pressure}`);
     };
 
     updateStageImage(): void {
