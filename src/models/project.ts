@@ -62,10 +62,10 @@ export class ProjectModel {
     ///////////////////////////////////////////////////////////////////////////
 
     @observable
-    primaryColor: RGBA = [0.5, 0.4, 0.3, 1];
+    primaryColor: RGBA = [1.0, 0.0, 0.0, 1];
 
     @observable
-    secondaryColor: RGBA = [0.2, 0.3, 0.9, 1];
+    secondaryColor: RGBA = [0.0, 0.0, 1.0, 1];
 
     ///////////////////////////////////////////////////////////////////////////
     /// Tool States
@@ -78,7 +78,7 @@ export class ProjectModel {
     fillTolerance: number = 0;
 
     @observable
-    pencilSize: number = 1;
+    pencilSize: number = 4;
 
     @observable
     eraserSize: number = 1;

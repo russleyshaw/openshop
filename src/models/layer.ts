@@ -66,16 +66,22 @@ export class LayerModel {
 
         let pixelIdx = 0;
         let subPixelIdx = 0;
+        let xIdx = 0;
+        let yIdx = 0;
 
         const halfSize = size / 2;
 
-        for (let y = Math.round(point[1] - halfSize); y <= Math.round(point[1] + halfSize); y++) {
+        for (
+            yIdx = Math.round(point[1] - halfSize);
+            yIdx <= Math.round(point[1] + halfSize);
+            yIdx++
+        ) {
             for (
-                let x = Math.round(point[0] - halfSize);
-                x <= Math.round(point[0] + halfSize);
-                x++
+                xIdx = Math.round(point[0] - halfSize);
+                xIdx <= Math.round(point[0] + halfSize);
+                xIdx++
             ) {
-                pixelIdx = y * image.width + x;
+                pixelIdx = yIdx * image.width + xIdx;
                 subPixelIdx = pixelIdx * 4;
 
                 image.data[subPixelIdx + 0] = color[0];

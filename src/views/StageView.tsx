@@ -19,6 +19,9 @@ const StageCanvas = styled.canvas`
     position: absolute;
     top: 0;
     left: 0;
+
+    user-select: none;
+    touch-action: none;
 `;
 
 export interface StageViewProps {
@@ -54,6 +57,12 @@ interface GlState {
     };
 }
 
+interface PointerPath {
+    x: number;
+    y: number;
+    pressure: number;
+}
+
 export default class StageView extends React.Component<StageViewProps> {
     rootRef: HTMLDivElement | null = null;
     stageRef: HTMLCanvasElement | null = null;
@@ -65,8 +74,13 @@ export default class StageView extends React.Component<StageViewProps> {
     projectionMatrix = mat4.create();
     modelViewMatrix = mat4.create();
 
-    isMouseDown: boolean = false;
-    mouseCanvasPosition: Point = [0, 0];
+    pointerX: number = 0;
+    pointerY: number = 0;
+    pointerPressure: number = 0;
+    pointerTiltX: number = 0;
+    pointerTiltY: number = 0;
+
+    pointQueue: PointerPath[] = [];
 
     constructor(props: StageViewProps) {
         super(props);
@@ -91,7 +105,48 @@ export default class StageView extends React.Component<StageViewProps> {
         this.rootRef = ref;
     };
 
-    onStageClick: React.MouseEventHandler = event => {
+    onStagePointerDown: React.PointerEventHandler = event => {
+        this.onStagePointerEvent(event);
+
+        this.throttledApplyPointQueue();
+    };
+
+    onStagePointerUp: React.PointerEventHandler = event => {
+        this.onStagePointerEvent(event);
+
+        this.throttledApplyPointQueue();
+    };
+
+    throttledApplyPointQueue = throttle(
+        () => {
+            const project = this.props.project;
+            const layer = project.selectedLayer;
+            if (layer == null) return;
+
+            const points = this.pointQueue;
+            this.pointQueue = [];
+            for (const point of points) {
+                layer.drawPoint(
+                    [point.x, point.y],
+                    project.primaryColor,
+                    project.pencilSize * point.pressure,
+                    project.dirtyPixels
+                );
+            }
+
+            this.updateStageImage();
+        },
+        1000 / 24,
+        { leading: false, trailing: true }
+    );
+
+    onStagePointerMove: React.PointerEventHandler = event => {
+        this.onStagePointerEvent(event);
+
+        this.throttledApplyPointQueue();
+    };
+
+    onStagePointerEvent: React.PointerEventHandler = event => {
         const project = this.props.project;
 
         const layer = project.selectedLayer;
@@ -101,79 +156,25 @@ export default class StageView extends React.Component<StageViewProps> {
 
         const bbox = ref.getBoundingClientRect();
 
-        const canvasX = event.clientX - bbox.left;
-        const canvasY = event.clientY - bbox.top;
+        this.pointerX = event.clientX - bbox.left;
+        this.pointerY = event.clientY - bbox.top;
+        this.pointerPressure = event.pressure;
+        this.pointerTiltX = event.tiltX;
+        this.pointerTiltY = event.tiltY;
 
-        layer.drawPoint(
-            [canvasX, canvasY],
-            project.primaryColor,
-            project.pencilSize,
-            project.dirtyPixels
-        );
+        if (this.pointerPressure === 0) return;
 
-        this.updateStageImage();
-    };
-
-    onStageMouseDown: React.MouseEventHandler<HTMLCanvasElement> = event => {
-        this.isMouseDown = true;
-
-        const bbox = event.currentTarget.getBoundingClientRect();
-
-        const canvasX = event.clientX - bbox.left;
-        const canvasY = event.clientY - bbox.top;
-
-        this.mouseCanvasPosition[0] = canvasX;
-        this.mouseCanvasPosition[1] = canvasY;
-    };
-
-    onStageMouseUp: React.MouseEventHandler<HTMLCanvasElement> = event => {
-        this.isMouseDown = false;
-
-        const bbox = event.currentTarget.getBoundingClientRect();
-
-        const canvasX = event.clientX - bbox.left;
-        const canvasY = event.clientY - bbox.top;
-
-        this.mouseCanvasPosition[0] = canvasX;
-        this.mouseCanvasPosition[1] = canvasY;
-    };
-
-    onStageMouseMove: React.MouseEventHandler<HTMLCanvasElement> = event => {
-        const bbox = event.currentTarget.getBoundingClientRect();
-
-        const project = this.props.project;
-        const canvasX = event.clientX - bbox.left;
-        const canvasY = event.clientY - bbox.top;
-
-        if (this.isMouseDown && project.selectedTool === Tool.Pencil) {
-            const layer = project.selectedLayer;
-            if (layer != null) {
-                layer.drawLine(
-                    this.mouseCanvasPosition,
-                    [canvasX, canvasY],
-                    project.primaryColor,
-                    project.pencilSize,
-                    project.dirtyPixels
-                );
-            }
-        }
-
-        this.mouseCanvasPosition[0] = canvasX;
-        this.mouseCanvasPosition[1] = canvasY;
-
-        this.updateStageImage();
-    };
-
-    onStagePointerMove: React.PointerEventHandler<HTMLCanvasElement> = event => {
-        console.log(`Tilt: (${event.tiltX}, ${event.tiltY} Pressure: ${event.pressure}`);
+        this.pointQueue.push({
+            pressure: event.pressure,
+            x: this.pointerX,
+            y: this.pointerY,
+        });
     };
 
     updateStageImage(): void {
         const project = this.props.project;
         const layer = project.selectedLayer;
-        if (layer == null) {
-            return;
-        }
+        if (layer == null) return;
 
         let pixelIdx = 0;
         let subPixelIdx = 0;
@@ -206,7 +207,12 @@ export default class StageView extends React.Component<StageViewProps> {
         }
     }
 
-    async startDrawing() {
+    throttledUpdateStageImage = throttle(() => this.updateStageImage(), 1000 / 24, {
+        leading: false,
+        trailing: true,
+    });
+
+    async startDrawing(): Promise<void> {
         const stageRef = this.stageRef;
         if (stageRef == null) return;
 
@@ -234,10 +240,8 @@ export default class StageView extends React.Component<StageViewProps> {
             <RootDiv ref={this.onRootRef}>
                 <StageCanvas
                     onPointerMove={this.onStagePointerMove}
-                    onMouseDown={this.onStageMouseDown}
-                    onMouseUp={this.onStageMouseUp}
-                    onMouseMove={this.onStageMouseMove}
-                    onClick={this.onStageClick}
+                    onPointerDown={this.onStagePointerDown}
+                    onPointerUp={this.onStagePointerUp}
                     ref={this.onStageRef}
                 />
             </RootDiv>

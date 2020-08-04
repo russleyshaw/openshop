@@ -1,3 +1,6 @@
+import { sortBy } from "lodash";
+import { Point } from "../common/point";
+
 export class F32ImageData {
     readonly width: number;
     readonly height: number;
