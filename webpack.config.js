@@ -9,8 +9,10 @@ const path = require("path");
 module.exports = (_, args) => {
     const mode = args.mode || "development";
     const isDevMode = mode === "development";
+    const publicPath = process.env.PUBLIC_PATH ?? "/";
 
     console.log("Mode: ", mode);
+    console.log("Public Path: ", publicPath);
 
     const plugins = [
         new HtmlWebpackPlugin({ template: "./src/index.html" }),
@@ -113,6 +115,7 @@ module.exports = (_, args) => {
             filename: "[name].bundle.js",
             chunkFilename: "[name].bundle.js",
             path: path.resolve(__dirname, "dist"),
+            publicPath,
         },
         watchOptions: {
             ignored: /node_modules/,

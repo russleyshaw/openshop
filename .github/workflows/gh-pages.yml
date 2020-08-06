@@ -20,6 +20,8 @@ jobs:
 
             - name: Build
               run: yarn build
+              env:
+                  PUBLIC_PATH: /openshop/
 
             - name: Prepare for deployment
               run: touch dist/.nojekyll
