@@ -6,7 +6,6 @@ import { mapRange } from "../common/util";
 import alphaPatternUrl from "../../static/alpha-pattern.png";
 import { useNotifyState } from "../common/notifier";
 import { AlphaBackdropDiv } from "./alpha_backdrop";
-import { MouseEventLayers } from "../common/react";
 
 export interface PointerDebugModalProps {
     open?: boolean;
