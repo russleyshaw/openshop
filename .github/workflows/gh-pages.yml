@@ -22,6 +22,7 @@ jobs:
               run: yarn build
               env:
                   PUBLIC_PATH: /openshop/
+                  GIT_HASH: ${{ env.GITHUB_SHA }}
 
             - name: Prepare for deployment
               run: touch dist/.nojekyll

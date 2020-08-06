@@ -3,16 +3,23 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const ForkTsCheckerPlugin = require("fork-ts-checker-webpack-plugin");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
 const path = require("path");
+
+const { execSync } = require("child_process");
 
 module.exports = (_, args) => {
     const mode = args.mode || "development";
-    const isDevMode = mode === "development";
-    const publicPath = process.env.PUBLIC_PATH ?? "/";
+    const PUBLIC_PATH = process.env.PUBLIC_PATH || "/";
+    const GIT_HASH =
+        process.env.GIT_HASH || execSync("git rev-parse HEAD").toString().replace(/\s/g, "");
+    const TIMESTAMP = new Date().toUTCString();
 
-    console.log("Mode: ", mode);
-    console.log("Public Path: ", publicPath);
+    const isDevMode = mode === "development";
+
+    console.log("Mode:        ", mode);
+    console.log("Public Path: ", PUBLIC_PATH);
+    console.log("Git Hash:    ", GIT_HASH);
+    console.log("Timestamp:   ", TIMESTAMP);
 
     const plugins = [
         new HtmlWebpackPlugin({ template: "./src/index.html" }),
@@ -20,6 +27,12 @@ module.exports = (_, args) => {
         new MiniCssExtractPlugin({
             filename: isDevMode ? "[name].css" : "[name].[hash].css",
             chunkFilename: isDevMode ? "[id].css" : "[id].[hash].css",
+        }),
+        new webpack.DefinePlugin({
+            "process.env.NODE_ENV": JSON.stringify(mode),
+            "process.env.DEBUG": JSON.stringify(isDevMode),
+            "process.env.GIT_HASH": JSON.stringify(GIT_HASH),
+            "process.env.TIMESTAMP": JSON.stringify(TIMESTAMP),
         }),
     ];
 
@@ -40,6 +53,7 @@ module.exports = (_, args) => {
     } else {
         plugins.push(
             new BundleAnalyzerPlugin({
+                openAnalyzer: false,
                 analyzerMode: "static",
             })
         );
@@ -112,10 +126,10 @@ module.exports = (_, args) => {
             alias,
         },
         output: {
-            filename: "[name].bundle.js",
-            chunkFilename: "[name].bundle.js",
+            filename: isDevMode ? "[name].bundle.js" : "[name].[contenthash].bundle.js",
+            chunkFilename: isDevMode ? "[name].bundle.js" : "[name].[contenthash].bundle.js",
             path: path.resolve(__dirname, "dist"),
-            publicPath,
+            publicPath: PUBLIC_PATH,
         },
         watchOptions: {
             ignored: /node_modules/,

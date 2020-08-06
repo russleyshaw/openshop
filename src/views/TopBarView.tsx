@@ -18,6 +18,7 @@ import { IconNames } from "@blueprintjs/icons";
 import { FaIcon } from "../components/fa_icon";
 import { faFile, faFileExport } from "@fortawesome/free-solid-svg-icons";
 import PointerDebugModal from "../components/PointerDebugModal";
+import AboutModal from "../components/AboutModal";
 
 export interface TopBarProps {
     app: AppModel;
@@ -28,6 +29,7 @@ export default observer((props: TopBarProps) => {
     const project = app.selectedProject;
 
     const [isPointerMenuOpen, setPointerMenuOpen] = React.useState(false);
+    const [isAboutOpen, setAboutOpen] = React.useState(false);
 
     return (
         <React.Fragment>
@@ -66,8 +68,10 @@ export default observer((props: TopBarProps) => {
                             </Menu>
                         </Popover>
                         <Popover>
-                            <Button minimal large text="Debug" rightIcon={IconNames.CARET_DOWN} />
+                            <Button minimal large text="Help" rightIcon={IconNames.CARET_DOWN} />
                             <Menu>
+                                <MenuItem text="About" onClick={() => setAboutOpen(true)} />
+                                <MenuDivider />
                                 <MenuItem
                                     text="Open Pointer Debug"
                                     onClick={() => setPointerMenuOpen(true)}
@@ -78,6 +82,7 @@ export default observer((props: TopBarProps) => {
                 </NavbarGroup>
             </Navbar>
             <PointerDebugModal open={isPointerMenuOpen} onClose={() => setPointerMenuOpen(false)} />
+            <AboutModal open={isAboutOpen} onClose={() => setAboutOpen(false)} />
         </React.Fragment>
     );
 });

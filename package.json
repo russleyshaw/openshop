@@ -55,6 +55,7 @@
         "@blueprintjs/core": "^3.29.0",
         "@blueprintjs/icons": "^3.19.0",
         "@fortawesome/fontawesome-svg-core": "^1.2.29",
+        "@fortawesome/free-brands-svg-icons": "^5.14.0",
         "@fortawesome/free-solid-svg-icons": "^5.13.1",
         "@fortawesome/react-fontawesome": "^0.1.11",
         "@hot-loader/react-dom": "^16.13.0",
