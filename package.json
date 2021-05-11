@@ -61,7 +61,7 @@
         "@hot-loader/react-dom": "^16.13.0",
         "core-js": "^3.6.5",
         "gl-matrix": "^3.3.0",
-        "lodash": "^4.17.15",
+        "lodash": "^4.17.21",
         "mobx": "^5.15.4",
         "mobx-react": "^6.2.2",
         "normalize.css": "^8.0.1",
